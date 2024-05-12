@@ -18,21 +18,17 @@ afterEach(() => {
 });
 
 
-test("simple interval", (done) => {
+test("simple interval", async () => {
     let count = 0;
     const interval = timer.setInterval((a, b) => {
         expect(a).toBe(1);
         expect(b).toBe(2);
-
         count++;
-        if (count === 3) {
-            timer.clearInterval(interval);
-            waitAndDone(done);
-        }
-        else if (count === 4) {
-            done(new Error("fourth loop is executed"));
-        }
     }, 10000, 1, 2);
+    timer.setTimeout(() => timer.clearInterval(interval), 30001);
+    
+    await new Promise((res) => timer.setTimeout(res, 50000));
+    expect(count).toBe(3);
 });
 
 test("one inteval, then remove", (done) => {
