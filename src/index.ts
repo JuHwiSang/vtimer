@@ -3,6 +3,7 @@ import { VirtualTimer, VirtualTimerOptions } from "./virtual.timer";
 
 export * from "./virtual.timer";
 export * from "./live.timer";
+export * from "./base";
 
 
 
