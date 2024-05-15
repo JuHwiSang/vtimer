@@ -6,9 +6,9 @@ It works like `setTimeout`, `setInterval` and `setImmediate`, but without delay.
 
 # Example
 ```typescript
-import createVTimer from "vtimer";
+import { createTimer } from "vtimer";
 
-const timer = createVTimer();
+const timer = createTimer();
 timer.setTimeout(() => console.log('2'), 10000000);
 console.log('1');
 
@@ -18,9 +18,9 @@ console.log('1');
 ```
 
 ```typescript
-import createVTimer from "vtimer";
+import { createTimer } from "vtimer";
 
-const timer = createVTimer();
+const timer = createTimer();
 
 const interval = timer.setInterval(() => console.log('interval'), 10000);
 timer.setTimeout(() => {
@@ -38,9 +38,9 @@ console.log('1');
 ```
 
 ```typescript
-import createVTimer from "vtimer";
+import { createTimer } from "vtimer";
 
-const timer = createVTimer();
+const timer = createTimer();
 
 timer.setTimeout(async () => {
     console.log('2');
@@ -62,9 +62,24 @@ console.log('1');
 ```
 
 
+If you want to change virtual timer to live timer, just add `"live"` argument.
+
+From
+```typescript
+import { createTimer } from "vtimer";
+const timer = createTimer(); // or createTimer("virtual")
+```
+to
+```typescript
+import { createTimer } from "vtimer";
+const timer = createTimer("live");
+```
+
+
 # Documentation
 
-### `VTimer`
+### `Timer`
+- `now`
 - `setTimeout`
 - `setInterval`
 - `setImmediate`
