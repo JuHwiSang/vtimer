@@ -1,6 +1,6 @@
 {
   "name": "@juhwisang/vtimer",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Virtual timer to help simulate time-sensitive programs",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
