@@ -1,6 +1,6 @@
-import createVTimer, { VTimer } from "../src"
+import { VirtualTimer, createTimer } from "../../src"
 
-let timer: VTimer;
+let timer: VirtualTimer;
 
 let _timeoutArray: NodeJS.Timeout[];
 function waitAndDone(done: () => any) {
@@ -8,7 +8,7 @@ function waitAndDone(done: () => any) {
 }
 
 beforeEach(() => {
-    timer = createVTimer(0);
+    timer = createTimer();
     _timeoutArray = [];
 });
 
