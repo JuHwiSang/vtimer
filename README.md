@@ -3,10 +3,12 @@
 
 It works like `setTimeout`, `setInterval` and `setImmediate`, but without delay.
 
+**This package was developed only for my other projects.**
+
 
 # Example
 ```typescript
-import { createTimer } from "vtimer";
+import { createTimer } from "@juhwisang/vtimer";
 
 const timer = createTimer();
 timer.setTimeout(() => console.log('2'), 10000000);
@@ -18,7 +20,7 @@ console.log('1');
 ```
 
 ```typescript
-import { createTimer } from "vtimer";
+import { createTimer } from "@juhwisang/vtimer";
 
 const timer = createTimer();
 
@@ -38,7 +40,7 @@ console.log('1');
 ```
 
 ```typescript
-import { createTimer } from "vtimer";
+import { createTimer } from "@juhwisang/vtimer";
 
 const timer = createTimer();
 
@@ -62,16 +64,37 @@ console.log('1');
 ```
 
 
+Moderately fast.
+```typescript
+import { createTimer } from "@juhwisang/vtimer";
+
+const timer = createTimer();
+
+let count = 0;
+const timeout = timer.setInterval(() => count++, 10000);
+
+console.log('start');
+timer.setTimeout(() => {
+    console.log('count:', count);
+    timer.clearInterval(timeout);
+}, 10000*1000000 + 1);
+
+// Output(delay: 2.5 sec)
+// start
+// count: 1000000
+```
+
+
 If you want to change virtual timer to live timer, just add `"live"` argument.
 
 From
 ```typescript
-import { createTimer } from "vtimer";
+import { createTimer } from "@juhwisang/vtimer";
 const timer = createTimer(); // or createTimer("virtual")
 ```
 to
 ```typescript
-import { createTimer } from "vtimer";
+import { createTimer } from "@juhwisang/vtimer";
 const timer = createTimer("live");
 ```
 
