@@ -1,7 +1,6 @@
 import createRBTree, { Tree } from "functional-red-black-tree";
 import { ExecutionInfo, ImmediateExecutionInfo } from "./base";
-import { uniqueId } from "./utils";
-
+import { CallStackObserver, setPop, uniqueId } from "./utils";
 
 
 
@@ -9,19 +8,23 @@ export interface VirtualTimerOptions {
     startTime: number
 }
 
+
 export class VirtualTimer {
     protected currentTime: number
-    protected timeline: Tree<number, ExecutionInfo[]>
+    protected timeline: Tree<[number, number], ExecutionInfo>
     protected intervalLocationMap: Record<number, ExecutionInfo>
-    protected immediateQueue: ImmediateExecutionInfo[]
+    protected immediateExecSet: Set<ImmediateExecutionInfo>
 
-    protected callStackEmptyImmediate?: NodeJS.Immediate
+    protected callStackObserver: CallStackObserver
 
     constructor(options?: Partial<VirtualTimerOptions>) {
         this.currentTime = options?.startTime ?? Date.now();
         this.timeline = createRBTree();
         this.intervalLocationMap = {}
-        this.immediateQueue = [];
+        this.immediateExecSet = new Set();
+
+        this.callStackObserver = new CallStackObserver();
+        this.callStackObserver.onCallStackEmpty = () => this.onCallStackEmpty();
     }
 
     now() {
@@ -29,87 +32,38 @@ export class VirtualTimer {
     }
 
     protected onCallStackEmpty() {
-        delete this.callStackEmptyImmediate;
 
-        if (this.immediateQueue.length !== 0) {
-            const nextExec = this.immediateQueue.shift()!;
+        if (this.immediateExecSet.size !== 0) {
+            const nextExec = setPop(this.immediateExecSet);
+            if (nextExec === undefined) {
+                throw new Error("size is not 0, but nextExec is undefined");
+            }
             nextExec._callback();
-            this.updateCallStackEmptyImmediate();
             return;
         }
-        else {
-            const nextExec = this.popNextExecutionOfTimeline();
+        else if (this.timeline.keys.length !== 0) {
+            const key = this.timeline.keys[0];
+            const nextExec = this.timeline.get(key)!;
+            this.timeline = this.timeline.remove(key);
             if (nextExec._interval) {
                 const newExecInfo = Object.assign({}, nextExec, {_time: nextExec._time + nextExec._ms});
                 this.reserveIntervalExecution(newExecInfo);
             }
             this.currentTime = nextExec._time;
             nextExec._callback();
-            this.updateCallStackEmptyImmediate();
             return;
-        }
-    }
-
-    protected popNextExecutionOfTimeline() {
-        if (this.timeline.length === 0) {
-            throw new Error("timeline is empty");
-        }
-
-        const execArray = this.timeline.get(this.timeline.keys[0])!;
-        if (execArray.length === 0) {
-            throw new Error("execArray is empty");
-        }
-
-        const poped = execArray.shift()!;
-        if (execArray.length === 0) {
-            this.timeline = this.timeline.remove(this.timeline.keys[0]);
-        }
-
-        return poped;
-    }
-
-    protected updateCallStackEmptyImmediate() {
-        if (this.timeline.length + this.immediateQueue.length === 0) {
-            clearImmediate(this.callStackEmptyImmediate);
-            delete this.callStackEmptyImmediate;
-            return;
-        }
-
-        if (this.callStackEmptyImmediate === undefined && (this.timeline.length + this.immediateQueue.length !== 0)) {
-            this.callStackEmptyImmediate = setImmediate(this.onCallStackEmpty.bind(this));
-            return;
+        } else {
+            this.callStackObserver.off();
         }
     }
 
     protected reserveExecution(execInfo: ExecutionInfo) {
-        const execArray = this.timeline.get(execInfo._time);
-        if (execArray) {
-            execArray.push(execInfo);
-        }
-        else {
-            this.timeline = this.timeline.insert(execInfo._time, [execInfo]);
-        }
-        
-        this.updateCallStackEmptyImmediate();
+        this.timeline = this.timeline.insert([execInfo._time, execInfo._id], execInfo);
+        this.callStackObserver.on();
     }
 
     protected cancelExecution(execInfo: ExecutionInfo) {
-        const execArray = this.timeline.get(execInfo._time);
-        if (!execArray) {
-            throw new Error(`no execution is reserved on time '${execInfo._time}'`);
-        }
-
-        const execIndex = execArray.findIndex((val) => val._id === execInfo._id);
-        if (execIndex === -1) {
-            throw new Error(`given execution is not reserved on time '${execInfo._time}'`);
-        }
-
-        execArray.splice(execIndex, 1);
-        if (execArray.length === 0) {
-            this.timeline = this.timeline.remove(execInfo._time);
-        }
-
-        this.updateCallStackEmptyImmediate();
+        this.timeline = this.timeline.remove([execInfo._time, execInfo._id]);
     }
 
     protected reserveIntervalExecution(execInfo: ExecutionInfo) {
@@ -123,18 +77,12 @@ export class VirtualTimer {
     }
 
     protected reserveImmediateExecution(execInfo: ImmediateExecutionInfo) {
-        this.immediateQueue.push(execInfo);
-        this.updateCallStackEmptyImmediate();
+        this.immediateExecSet.add(execInfo);
+        this.callStackObserver.on();
     }
 
     protected cancelImmediateExecution(execInfo: ImmediateExecutionInfo) {
-        const execIndex = this.immediateQueue.findIndex((val) => val._id === execInfo._id);
-        if (execIndex === -1) {
-            throw new Error("given execution does not exist on immediate queue");
-        }
-
-        this.immediateQueue.splice(execIndex, 1);
-        this.updateCallStackEmptyImmediate();
+        this.immediateExecSet.delete(execInfo)
     }
 
     setTimeout(callback: (args: void) => void, ms?: number): ExecutionInfo;
@@ -207,8 +155,7 @@ export class VirtualTimer {
     clearAll() {
         this.currentTime = Date.now();
         this.timeline = createRBTree();
-        this.immediateQueue = [];
-        clearImmediate(this.callStackEmptyImmediate);
-        delete this.callStackEmptyImmediate;
+        this.immediateExecSet = new Set();
+        this.callStackObserver.off();
     }
 }
