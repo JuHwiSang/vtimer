@@ -3,58 +3,35 @@
 
 It works like `setTimeout`, `setInterval` and `setImmediate`, but without delay.
 
-**This package was developed only for my other projects.**
-
 
 # Example
+
+simple example
 ```typescript
-import { createTimer } from "@juhwisang/vtimer";
+import { timer } from "@juhwisang/vtimer";
 
-const timer = createTimer();
-timer.setTimeout(() => console.log('2'), 10000000);
-console.log('1');
-
+timer.setTimeout(() => console.log(2), 999999);
+console.log(1);
 // Output
 // 1
 // 2
 ```
 
+complex example
 ```typescript
-import { createTimer } from "@juhwisang/vtimer";
-
-const timer = createTimer();
-
-const interval = timer.setInterval(() => console.log('interval'), 10000);
-timer.setTimeout(() => {
-    timer.clearInterval(interval);
-    console.log('5');
-}, 30001);
-console.log('1');
-
-// Output
-// 1
-// interval
-// interval
-// interval
-// 5
-```
-
-```typescript
-import { createTimer } from "@juhwisang/vtimer";
-
-const timer = createTimer();
+import { timer } from "@juhwisang/vtimer";
 
 timer.setTimeout(async () => {
-    console.log('2');
+    console.log(2);
     await new Promise((res) => timer.setTimeout(res, 20000));
-    console.log('4');
+    console.log(4);
 }, 10000);
 
 timer.setTimeout(() => {
-    console.log('3');
+    console.log(3);
 }, 20000);
 
-console.log('1');
+console.log(1);
 
 // Output
 // 1
@@ -63,39 +40,81 @@ console.log('1');
 // 4
 ```
 
-
-Moderately fast.
+performance
 ```typescript
-import { createTimer } from "@juhwisang/vtimer";
+import { timer } from "@juhwisang/vtimer";
 
-const timer = createTimer();
-
+console.time('time');
 let count = 0;
-const timeout = timer.setInterval(() => count++, 10000);
 
-console.log('start');
+for(let i=0; i<100_000; i++) {
+    timer.setImmediate(() => {
+        count++;
+        if (count >= 100_000) {
+            console.log(2);
+            console.timeEnd('time');
+        }
+    });
+}
+
+console.log(1);
+
+// Output
+// 1
+// 2
+// time: 1.882s
+```
+
+create virtual timer
+```typescript
+import { createTimer } from "vtimer";
+
+const timer = createTimer("virtual");
+
+console.time("time");
 timer.setTimeout(() => {
-    console.log('count:', count);
-    timer.clearInterval(timeout);
-}, 10000*1000000 + 1);
+    console.log(2);
+    console.timeEnd("time");
+}, 1000);
 
-// Output(delay: 2.5 sec)
-// start
-// count: 1000000
+console.log(1);
+
+// Output
+// 1
+// 2
+// time: 5.237ms
 ```
 
-
-If you want to change virtual timer to live timer, just add `"live"` argument.
-
-From
+create live timer
 ```typescript
-import { createTimer } from "@juhwisang/vtimer";
-const timer = createTimer(); // or createTimer("virtual")
-```
-to
-```typescript
-import { createTimer } from "@juhwisang/vtimer";
+import { createTimer } from "vtimer";
+
 const timer = createTimer("live");
+
+console.time("time");
+timer.setTimeout(() => {
+    console.log(2);
+    console.timeEnd("time");
+}, 1000);
+
+console.log(1);
+
+// Output
+// 1
+// 2
+// time: 1.011s
+```
+
+If you want to change virtual global timer to live global timer, just add:
+
+```typescript
+import { setGlobalTimer } from "@juhwisang/vtimer";
+setGlobalTimer("live");
+```
+or
+```typescript
+import { setGlobalTimer, createTimer } from "@juhwisang/vtimer";
+setGlobalTimer(createTimer("live"));
 ```
 
 
