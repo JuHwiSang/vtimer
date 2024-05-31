@@ -21,13 +21,13 @@ export function createTimer(mode: "virtual" | "live" = "virtual", options?: Part
 }
 
 // Global Timer
-export const gTimer = new WrapperTimer();
+export const timer = new WrapperTimer();
 export function setGlobalTimer(timer: Timer): void;
 export function setGlobalTimer(mode: "virtual" | "live", options?: Partial<VirtualTimerOptions | LiveTimerOptions>): void;
 export function setGlobalTimer(timerOrMode: Timer | "virtual" | "live", options?: Partial<VirtualTimerOptions | LiveTimerOptions>) : void {
     if (timerOrMode instanceof Object) {
-        gTimer.setTimer(timerOrMode);
+        timer.setTimer(timerOrMode);
     } else {
-        gTimer.setTimer(createTimer(timerOrMode, options));
+        timer.setTimer(createTimer(timerOrMode, options));
     }
 }

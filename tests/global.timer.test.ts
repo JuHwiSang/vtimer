@@ -1,4 +1,4 @@
-import { gTimer, setGlobalTimer } from "../src"
+import { timer, setGlobalTimer } from "../src"
 
 let _timeoutArray: NodeJS.Timeout[];
 function waitAndDone(done: () => any) {
@@ -11,19 +11,19 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-    gTimer.clearAll();
+    timer.clearAll();
     _timeoutArray.forEach(clearTimeout);
 });
 
 
 test("overrided global timer will be clearedAll", (done) => {
-    gTimer.setTimeout(() => {
+    timer.setTimeout(() => {
         done(new Error("timeout is executed"));
     });
-    gTimer.setInterval(() => {
+    timer.setInterval(() => {
         done(new Error("interval is executed"));
     });
-    gTimer.setImmediate(() => {
+    timer.setImmediate(() => {
         done(new Error("immediate is executed"));
     });
     setGlobalTimer("virtual");
@@ -33,7 +33,7 @@ test("overrided global timer will be clearedAll", (done) => {
 test("live timer will cause delays", (done) => {
     setGlobalTimer("live");
     const startTime = Date.now();
-    gTimer.setTimeout(() => {
+    timer.setTimeout(() => {
         expect(Date.now() - startTime > 80).toBe(true);
         expect(Date.now() - startTime < 120).toBe(true);
         done();
@@ -43,7 +43,7 @@ test("live timer will cause delays", (done) => {
 test("change the global timer twice", (done) => {
     setGlobalTimer("live");
     setGlobalTimer("virtual");
-    gTimer.setTimeout(() => {
+    timer.setTimeout(() => {
         done();
     }, 10000);
 });
