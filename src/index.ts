@@ -1,8 +1,11 @@
+import { Timer } from "./base";
 import { LiveTimer, LiveTimerOptions } from "./live.timer";
 import { VirtualTimer, VirtualTimerOptions } from "./virtual.timer";
+import { WrapperTimer } from "./wrapper.timer";
 
 export * from "./virtual.timer";
 export * from "./live.timer";
+export * from "./wrapper.timer";
 export * from "./base";
 
 
@@ -14,5 +17,17 @@ export function createTimer(mode: "virtual" | "live" = "virtual", options?: Part
         return new VirtualTimer(options);
     } else {
         return new LiveTimer(options);
+    }
+}
+
+// Global Timer
+export const gTimer = new WrapperTimer();
+export function setGlobalTimer(timer: Timer): void;
+export function setGlobalTimer(mode: "virtual" | "live", options?: Partial<VirtualTimerOptions | LiveTimerOptions>): void;
+export function setGlobalTimer(timerOrMode: Timer | "virtual" | "live", options?: Partial<VirtualTimerOptions | LiveTimerOptions>) : void {
+    if (timerOrMode instanceof Object) {
+        gTimer.setTimer(timerOrMode);
+    } else {
+        gTimer.setTimer(createTimer(timerOrMode, options));
     }
 }
